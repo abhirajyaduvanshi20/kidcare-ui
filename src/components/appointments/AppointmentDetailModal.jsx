@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Calendar, Clock, Video, MapPin, CheckCircle, AlertTriangle, ShieldCheck, PhoneCall, Trash2 } from 'lucide-react';
+import { X, Calendar, Clock, Video, MapPin, CheckCircle, AlertTriangle, ShieldCheck, PhoneCall, Trash2, RotateCcw } from 'lucide-react';
 
 export const AppointmentDetailModal = () => {
   const { closeModal, modalData, cancelAppointment, openModal } = useApp();
@@ -8,6 +8,8 @@ export const AppointmentDetailModal = () => {
   if (!modalData) return null;
   const apt = modalData;
   const isUpcoming = apt.type === 'UPCOMING';
+  const isFollowUp = apt.type === 'FOLLOW_UP';
+  const canJoin = isUpcoming || isFollowUp;
 
   return (
     <div className="modal-backdrop" onClick={closeModal}>
@@ -20,11 +22,11 @@ export const AppointmentDetailModal = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: '#056DB4', textTransform: 'uppercase' }}>
-              Token: {apt.bookingCode}
+            <span style={{ fontSize: '11px', fontWeight: '800', color: isFollowUp ? '#047857' : '#056DB4', textTransform: 'uppercase' }}>
+              Token: {apt.bookingCode} {isFollowUp && '• Follow-Up'}
             </span>
             <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#012741' }}>
-              Appointment Details
+              {isFollowUp ? 'Follow-Up Consultation' : 'Appointment Details'}
             </h3>
           </div>
           <button 
@@ -38,7 +40,9 @@ export const AppointmentDetailModal = () => {
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Doctor Info Card */}
           <div style={{
-            background: 'linear-gradient(135deg, #056DB4 0%, #012741 100%)',
+            background: isFollowUp 
+              ? 'linear-gradient(135deg, #047857 0%, #012741 100%)' 
+              : 'linear-gradient(135deg, #056DB4 0%, #012741 100%)',
             borderRadius: '20px',
             padding: '16px',
             color: '#FFFFFF',
@@ -55,6 +59,34 @@ export const AppointmentDetailModal = () => {
               <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>{apt.hospital}</p>
             </div>
           </div>
+
+          {/* Follow-up Note banner */}
+          {apt.followUpReason && (
+            <div style={{
+              background: '#F0FDF4',
+              border: '1.5px solid #BBF7D0',
+              borderRadius: '16px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px'
+            }}>
+              <RotateCcw size={18} color="#047857" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <div>
+                <h5 style={{ fontSize: '12.5px', fontWeight: '800', color: '#065F46' }}>
+                  Follow-Up Review Target
+                </h5>
+                <p style={{ fontSize: '11.5px', color: '#047857', marginTop: '2px' }}>
+                  {apt.followUpReason}
+                </p>
+                {apt.notes && (
+                  <p style={{ fontSize: '11.5px', color: '#166534', marginTop: '4px', fontStyle: 'italic' }}>
+                    "{apt.notes}"
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Timing & Child */}
           <div style={{
@@ -81,7 +113,7 @@ export const AppointmentDetailModal = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B' }}>Status:</span>
-              <strong style={{ color: apt.type === 'UPCOMING' ? '#3AA17E' : '#64748B' }}>{apt.status}</strong>
+              <strong style={{ color: (isUpcoming || isFollowUp) ? '#3AA17E' : '#64748B' }}>{apt.status}</strong>
             </div>
           </div>
 
@@ -115,7 +147,7 @@ export const AppointmentDetailModal = () => {
 
           {/* Action CTAs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
-            {isUpcoming && (
+            {canJoin && (
               <button
                 onClick={() => {
                   closeModal();
@@ -124,11 +156,11 @@ export const AppointmentDetailModal = () => {
                 className="btn-green"
                 style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: '800' }}
               >
-                <Video size={18} /> Join Live Video Consultation
+                <Video size={18} /> {isFollowUp ? 'Join Follow-Up Video Call' : 'Join Live Video Consultation'}
               </button>
             )}
 
-            {isUpcoming && (
+            {canJoin && (
               <button
                 onClick={() => {
                   cancelAppointment(apt.id);
@@ -158,3 +190,4 @@ export const AppointmentDetailModal = () => {
     </div>
   );
 };
+

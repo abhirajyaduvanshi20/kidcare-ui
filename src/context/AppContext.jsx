@@ -173,6 +173,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const bookAppointment = (appointmentData) => {
+    const isFollowUp = appointmentData.type === 'FOLLOW_UP' || appointmentData.isFollowUp;
     const newApt = {
       id: `apt-${Date.now()}`,
       kidId: currentKid.id,
@@ -184,11 +185,12 @@ export const AppProvider = ({ children }) => {
       time: appointmentData.time,
       timestamp: `${appointmentData.date}, ${appointmentData.time}`,
       mode: appointmentData.mode || "Online Video Consultation",
-      type: "UPCOMING",
-      status: "Confirmed",
+      type: isFollowUp ? "FOLLOW_UP" : "UPCOMING",
+      status: isFollowUp ? "Scheduled Follow-up" : "Confirmed",
       bookingCode: `KC-${Math.floor(10000 + Math.random() * 90000)}`,
       symptoms: appointmentData.symptoms || [],
-      notes: appointmentData.notes || "Routine pediatric evaluation requested.",
+      notes: appointmentData.notes || (isFollowUp ? "Pediatric follow-up check requested." : "Routine pediatric evaluation requested."),
+      followUpReason: isFollowUp ? (appointmentData.followUpReason || "Post-Treatment Follow-up Review") : undefined,
       doctorAvatar: "/assets/dr_ila_b.png",
       guidelines: [
         "Keep child in a well-lit room for visual assessment",
@@ -197,7 +199,7 @@ export const AppProvider = ({ children }) => {
       ]
     };
     setAppointments(prev => [newApt, ...prev]);
-    showToast("Appointment booked successfully!");
+    showToast(isFollowUp ? "Follow-up consultation booked!" : "Appointment booked successfully!");
     return newApt;
   };
 

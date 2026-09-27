@@ -5,10 +5,12 @@ import { X, ChevronRight, ChevronLeft, Calendar, Clock, Video, MapPin, Check, Sh
 import confetti from 'canvas-confetti';
 
 export const NewAppointmentModal = () => {
-  const { closeModal, currentKid, bookAppointment } = useApp();
+  const { closeModal, currentKid, bookAppointment, modalData } = useApp();
 
+  const [isFollowUp, setIsFollowUp] = useState(() => modalData?.isFollowUp || false);
   const [step, setStep] = useState(1); // 1: Child & Mode -> 2: Symptoms -> 3: Date & Slot -> 4: Confirmed
   const [consultMode, setConsultMode] = useState('Online Video Consultation');
+  const [followUpReason, setFollowUpReason] = useState('Post-Treatment Clinical Review & Progress Check');
   const [selectedSymptoms, setSelectedSymptoms] = useState(['Fever / High Temperature']);
   const [customSymptom, setCustomSymptom] = useState('');
   const [selectedDate, setSelectedDate] = useState('2026-09-28');
@@ -23,6 +25,14 @@ export const NewAppointmentModal = () => {
     { slot: '04:30 PM', period: 'Afternoon' },
     { slot: '06:00 PM', period: 'Evening' },
     { slot: '07:15 PM', period: 'Evening' }
+  ];
+
+  const followUpReasonsList = [
+    'Post-Treatment Clinical Review & Progress Check',
+    'Post-Viral Fever Recovery & Lung Sound Check',
+    'Skin Eczema / Allergy Response Evaluation',
+    'Antibiotic / Medication Course Completion Check',
+    'Routine Growth & Nutrition Progress Check'
   ];
 
   const toggleSymptom = (symName) => {
@@ -47,8 +57,10 @@ export const NewAppointmentModal = () => {
       date: selectedDate,
       time: selectedTime,
       mode: consultMode,
+      type: isFollowUp ? 'FOLLOW_UP' : 'UPCOMING',
+      followUpReason: isFollowUp ? followUpReason : undefined,
       symptoms: selectedSymptoms,
-      notes: notes || "Pediatric consultation requested."
+      notes: notes || (isFollowUp ? `Follow-up on: ${followUpReason}` : "Pediatric consultation requested.")
     });
     setConfirmedBooking(apt);
     setStep(4);
@@ -117,21 +129,82 @@ export const NewAppointmentModal = () => {
               </div>
             </div>
 
-            {/* Child being booked for */}
+            {/* Consultation Type Selector */}
             <div>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '6px' }}>
-                Consultation For
+              <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '8px' }}>
+                Consultation Type
               </label>
-              <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#056DB4', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700' }}>
-                  {currentKid.name[0]}
-                </div>
-                <div>
-                  <h5 style={{ fontSize: '13.5px', fontWeight: '700', color: '#012741' }}>{currentKid.name}</h5>
-                  <p style={{ fontSize: '11px', color: '#64748B' }}>{currentKid.age} • Blood Group: {currentKid.bloodGroup}</p>
-                </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                background: '#F1F5F9',
+                padding: '4px',
+                borderRadius: '14px'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setIsFollowUp(false)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: !isFollowUp ? '#FFFFFF' : 'transparent',
+                    color: !isFollowUp ? '#056DB4' : '#64748B',
+                    fontWeight: !isFollowUp ? '800' : '600',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    boxShadow: !isFollowUp ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'
+                  }}
+                >
+                  Standard Visit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsFollowUp(true)}
+                  style={{
+                    padding: '8px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: isFollowUp ? '#047857' : 'transparent',
+                    color: isFollowUp ? '#FFFFFF' : '#64748B',
+                    fontWeight: isFollowUp ? '800' : '600',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    boxShadow: isFollowUp ? '0 2px 6px rgba(4,120,87,0.2)' : 'none'
+                  }}
+                >
+                  Follow-Up Review
+                </button>
               </div>
             </div>
+
+            {/* If Follow-Up selected, show follow-up reason picker */}
+            {isFollowUp && (
+              <div style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', padding: '12px', borderRadius: '14px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: '800', color: '#065F46', display: 'block', marginBottom: '6px' }}>
+                  Select Follow-Up Objective:
+                </label>
+                <select
+                  value={followUpReason}
+                  onChange={(e) => setFollowUpReason(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '10px',
+                    border: '1px solid #86EFAC',
+                    background: '#FFFFFF',
+                    fontSize: '12px',
+                    color: '#065F46',
+                    fontWeight: '600'
+                  }}
+                >
+                  {followUpReasonsList.map((r, i) => (
+                    <option key={i} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Consultation Mode Options */}
             <div>
